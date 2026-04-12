@@ -1,6 +1,11 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+export const API = {
+  PORT: Number(process.env.PORT!),
+  ORIGIN_URL: process.env.ORIGIN_URL!,
+};
+
 export const GEMINI = {
   API_KEY: process.env.GEMINI_API_KEY!,
   MODEL: process.env.GEMINI_MODEL!,
