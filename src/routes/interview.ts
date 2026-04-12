@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { scrapeJob } from '../services/scraper';
 import { parseCV } from '../services/parser';
-import { nextStep } from '../services/gemini';
+import { generateSummary, nextStep } from '../services/gemini';
 import { createSession, getSession, addMessage } from '../store/session';
 import { AI_CONTEXT } from '../config';
 
@@ -45,7 +45,12 @@ router.post('/start', upload.single('cv'), async (req, res) => {
 
 router.post('/answer', async (req, res) => {
   try {
-    const { sessionId, answer } = req.body;
+    const { answer } = req.body;
+    const sessionId = req.get('X-Session-ID');
+
+    if (!sessionId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     const session = getSession(sessionId);
 
@@ -73,6 +78,27 @@ router.post('/answer', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to process answer' });
+  }
+});
+
+router.post('/summary', async (req, res) => {
+  try {
+    const sessionId = req.get('X-Session-ID');
+    if (!sessionId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const session = getSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const summary = await generateSummary(session.history);
+
+    return res.json(summary);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to process summary' });
   }
 });
 

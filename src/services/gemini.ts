@@ -59,3 +59,47 @@ Return JSON format:
 
   return result;
 }
+
+export async function generateSummary(
+  history: { role: string; content: string }[],
+) {
+  const prompt = `
+You are a senior technical interviewer and HR evaluator.
+
+You will analyze the full interview conversation below and produce a FINAL EVALUATION REPORT.
+
+IMPORTANT:
+- Return ONLY valid JSON
+- No markdown
+- No explanation text
+
+Interview conversation:
+${history.map((m) => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}
+
+Return format:
+{
+  "overallScore": number (0-10),
+  "technicalScore": number (0-10),
+  "communicationScore": number (0-10),
+  "strengths": string[],
+  "weaknesses": string[],
+  "summary": string,
+  "recommendation": "strong_hire | hire | maybe | no_hire"
+}
+`;
+
+  const res = await ai.models.generateContent({
+    model: GEMINI.MODEL,
+    contents: prompt,
+  });
+
+  const text = res.text?.trim() || '';
+
+  const cleaned = text.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    throw new Error('Failed to parse summary JSON: ' + cleaned);
+  }
+}
