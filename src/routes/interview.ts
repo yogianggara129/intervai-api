@@ -81,7 +81,7 @@ router.post('/answer', async (req, res) => {
   }
 });
 
-router.post('/summary', async (req, res) => {
+router.get('/summary', async (req, res) => {
   try {
     const sessionId = req.get('X-Session-ID');
     if (!sessionId) {
