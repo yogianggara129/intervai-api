@@ -49,10 +49,7 @@ Return JSON format:
 }
 `;
 
-  const response = await ai.models.generateContent({
-    model: GEMINI.MODEL,
-    contents: prompt,
-  });
+  const response = await callGemini(prompt);
 
   const clean = response?.text?.replace(/```json|```/g, '').trim() ?? '{}';
   const result = JSON.parse(clean);
@@ -88,12 +85,9 @@ Return format:
 }
 `;
 
-  const res = await ai.models.generateContent({
-    model: GEMINI.MODEL,
-    contents: prompt,
-  });
+  const res = await callGemini(prompt);
 
-  const text = res.text?.trim() || '';
+  const text = res?.text?.trim() || '';
 
   const cleaned = text.replace(/```json|```/g, '').trim();
 
@@ -101,5 +95,24 @@ Return format:
     return JSON.parse(cleaned);
   } catch {
     throw new Error('Failed to parse summary JSON: ' + cleaned);
+  }
+}
+
+async function callGemini(prompt: string) {
+  try {
+    return await ai.models.generateContent({
+      model: GEMINI.MODEL,
+      contents: prompt,
+    });
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    if (e.status === 503) {
+      const overloaded = new Error(
+        'Gemini model is currently overloaded (503)',
+      ) as Error & { status: number };
+      overloaded.status = 503;
+      throw overloaded;
+    }
+    throw err;
   }
 }

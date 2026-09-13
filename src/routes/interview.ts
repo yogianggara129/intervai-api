@@ -39,6 +39,10 @@ router.post('/start', upload.single('cv'), async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    const e = err as { status?: number };
+    if (e.status === 503) {
+      return res.status(503).json({ error: 'Model overload', retryable: true });
+    }
     res.status(500).json({ error: 'Failed to start interview' });
   }
 });
@@ -63,20 +67,28 @@ router.post('/answer', async (req, res) => {
       return res.json();
     }
 
-    addMessage(sessionId, 'user', answer);
+    // Create updated history WITHOUT persisting yet
+    const pendingHistory = [...session.history, { role: 'user', content: answer }];
+    const pendingCount = session.questionCount + 1;
 
     const reply = await nextStep(
       session.jobText,
       session.cvText,
-      session.history,
-      session.questionCount,
+      pendingHistory,
+      pendingCount,
     );
 
+    // Only persist AFTER success
+    addMessage(sessionId, 'user', answer);
     addMessage(sessionId, 'ai', reply);
 
     res.json(reply);
   } catch (err) {
     console.error(err);
+    const e = err as { status?: number };
+    if (e.status === 503) {
+      return res.status(503).json({ error: 'Model overload', retryable: true });
+    }
     res.status(500).json({ error: 'Failed to process answer' });
   }
 });
@@ -98,6 +110,10 @@ router.get('/summary', async (req, res) => {
     return res.json(summary);
   } catch (err) {
     console.error(err);
+    const e = err as { status?: number };
+    if (e.status === 503) {
+      return res.status(503).json({ error: 'Model overload', retryable: true });
+    }
     res.status(500).json({ error: 'Failed to process summary' });
   }
 });
