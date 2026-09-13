@@ -1,0 +1,20 @@
+name: Trigger Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA to deploy'
+        required: true
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DEPLOY_PAT }}
+          repository: yogianggara129/intervai-deployment
+          event-type: api-updated
+          client-payload: '{"sha":"${{ github.event.inputs.sha }}"}'
