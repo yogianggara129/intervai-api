@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const API = {
-  PORT: Number(process.env.PORT!),
+  PORT: Number(process.env.PORT ?? 8080),
   ORIGIN_URL: process.env.ORIGIN_URL!,
 };
 
