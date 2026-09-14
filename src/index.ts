@@ -8,7 +8,7 @@ const app = express();
 app.use(cors({ origin: API.ORIGIN_URL }));
 app.use(express.json());
 
-app.use('/interview', interviewRoutes);
+app.use('/api/interview', interviewRoutes);
 
 const PORT = API.PORT;
 
